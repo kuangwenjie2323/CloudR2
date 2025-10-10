@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+* { @apply antialiased; }
+body { @apply bg-surface text-zinc-900; }
+}
+
+
+@layer components {
+.glass {
+backdrop-filter: blur(var(--blur));
+background: rgba(var(--card), 0.7);
+}
+}
