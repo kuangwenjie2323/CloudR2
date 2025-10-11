@@ -41,7 +41,10 @@ if (!PUBLIC_LIST) {
     customMetadata: o.customMetadata || {}
   }));
   const folders = (res.delimitedPrefixes || []).map(p => ({ prefix: p }));
-
+    objects = (objects || []).filter(o => {
+    const name = o.key.split("/").pop();
+    return name !== ".keep";
+  });
   return new Response(JSON.stringify({
     prefix, delimiter: delimiter || null, objects, folders,
     truncated: !!res.truncated, cursor: res.cursor || null
