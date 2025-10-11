@@ -1,20 +1,21 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import Home from "../pages/Home";
-import Uploads from "../pages/Uploads";
-import Search from "../pages/Search";
-import RecycleBin from "../pages/RecycleBin";
-import Settings from "../pages/Settings";
+import { createContext, useContext, useMemo, useState } from "react";
 
-export default function RoutesView() {
-  return (
-    <Routes>
-      <Route index element={<Home />} />
-      <Route path="/uploads" element={<Uploads />} />
-      <Route path="/search" element={<Search />} />
-      <Route path="/recycle" element={<RecycleBin />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+// 给一个安全默认值，避免 Provider 不在时解构崩溃
+const defaultCtx = {
+  view: "grid",
+  setView: () => {},
+  tasks: [],
+  setTasks: () => {},
+};
+
+const Ctx = createContext(defaultCtx);
+
+export function Provider({ children }) {
+  const [view, setView] = useState("grid"); // 'grid' | 'list'
+  const [tasks, setTasks] = useState([]);   // 上传/下载任务数组
+
+  const api = useMemo(() => ({ view, setView, tasks, setTasks }), [view, tasks]);
+  return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
+
+export const useStore = () => useContext(Ctx);
