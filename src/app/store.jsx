@@ -1,18 +1,22 @@
 // 轻量全局状态（可替换为 Zustand/Recoil；此处保持零依赖）
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from "react";
 
+// —— 安全默认值，避免未包 Provider 时的解构报错
+const defaultCtx = {
+  view: "grid",
+  setView: () => {},
+  tasks: [],
+  setTasks: () => {},
+};
 
-const Ctx = createContext()
+const Ctx = createContext(defaultCtx);
 
+export function Provider({ children }) {
+  const [view, setView] = useState("grid"); // 'list' | 'grid'
+  const [tasks, setTasks] = useState([]);   // 上传/下载任务
 
-export function Provider({ children }){
-const [view, setView] = useState('grid') // 'list' | 'grid'
-const [tasks, setTasks] = useState([]) // 上传/下载任务
-
-
-const api = useMemo(()=>({ view, setView, tasks, setTasks }),[view,tasks])
-return <Ctx.Provider value={api}>{children}</Ctx.Provider>
+  const api = useMemo(() => ({ view, setView, tasks, setTasks }), [view, tasks]);
+  return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
 
-
-export const useStore = () => useContext(Ctx)
+export const useStore = () => useContext(Ctx);
