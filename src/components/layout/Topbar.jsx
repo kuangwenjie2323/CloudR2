@@ -2,7 +2,7 @@ import React from 'react'
 import SearchBar from '../search/SearchBar'
 import Button from '../common/Button'
 import { useStore } from '../../app/store'
-
+import UploadButton from "../UploadButton.jsx";
 
 export default function Topbar(){
 const { view, setView } = useStore()
@@ -14,7 +14,7 @@ return (
 <Button onClick={()=>setView(view==='grid'?'list':'grid')}>
 {view==='grid'?'列表视图':'网格视图'}
 </Button>
-<Button intent="primary">上传</Button>
+<UploadButton className="h-9 px-3 rounded-lg" />
 </div>
 </div>
 )
