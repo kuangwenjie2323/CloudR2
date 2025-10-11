@@ -1,0 +1,10 @@
+name = "CloudR2"
+main = "./functions/[[path]].js"
+compatibility_date = "2025-10-12"
+
+[[r2_buckets]]
+binding = "R2"                # 代码里用 env.R2 访问
+bucket_name = "r2-explorer-bucket"
+
+[vars]
+UPLOAD_TOKEN = "change-me-please-very-long-random"
