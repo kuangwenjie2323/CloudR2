@@ -4,21 +4,21 @@ import Topbar from './components/layout/Topbar'
 import Sidebar from './components/layout/Sidebar'
 import BottomNav from './components/layout/BottomNav'
 import TaskDrawer from './components/layout/TaskDrawer'
-
+import UploadButton from "./components/UploadButton.jsx";
+import TaskDrawer from "./components/TaskDrawer.jsx";
 import { fetchR2List, uploadToR2, uploadToR2WithProgress } from "./utils/api";
-
-// 仅用于调试：把 API 挂到 window 方便你在控制台调用
-if (typeof window !== "undefined") {
-  Object.assign(window, { fetchR2List, uploadToR2, uploadToR2WithProgress });
-}
 
 export default function App() {
 return (
-<div className="min-h-screen grid lg:grid-cols-[240px_1fr]">
-{/* Desktop sidebar */}
-<aside className="hidden lg:block bg-white shadow-soft">
-<Sidebar />
-</aside>
+<div className="min-h-screen bg-zinc-50">
+      <header className="sticky top-0 bg-white/80 backdrop-blur border-b border-zinc-200 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="font-semibold">Cloud Files</div>
+          <div className="flex items-center gap-2">
+            <UploadButton />
+          </div>
+        </div>
+      </header>
 
 
 <main className="flex flex-col">
