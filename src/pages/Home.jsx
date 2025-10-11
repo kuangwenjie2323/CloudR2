@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import useR2List from "../hooks/useR2List";
 import { useStore } from "../app/store";
+import ActionBar from "../components/ActionBar";
 
 const fmt = (n) => {
   if (n == null) return "-";
@@ -14,6 +15,7 @@ export default function Home() {
   const { items, folders, loading, error, cursor, loadMore, reload } = useR2List(prefix);
   useEffect(() => {
   const h = () => reload();
+  const { view, setView, prefix, setPrefix, selected, toggleSelect } = useStore();
   window.addEventListener("r2:reload", h);
   return () => window.removeEventListener("r2:reload", h);
 }, [reload, prefix]);
@@ -21,6 +23,7 @@ export default function Home() {
   return (
     <div className="p-4 space-y-4">
       <header className="flex items-center justify-between">
+        <ActionBar items={items} />
         <div className="text-xl font-semibold">我的文件 <span className="text-zinc-400">{prefix || "/"}</span></div>
         <div className="flex items-center gap-2">
           <button onClick={() => setView("grid")} className={`px-3 py-1 rounded ${view==="grid"?"bg-zinc-900 text-white":"bg-zinc-200"}`}>网格</button>
@@ -60,6 +63,46 @@ export default function Home() {
             </div>
           ))}
         </div>
+      // 网格视图中每个卡片：
+<div key={o.key} className="relative rounded-2xl p-3 bg-white shadow-sm border">
+  <input
+    type="checkbox"
+    className="absolute top-2 left-2 w-4 h-4"
+    checked={selected.includes(o.key)}
+    onChange={() => toggleSelect(o.key)}
+    title="选择"
+  />
+  <div className="aspect-video rounded-xl bg-zinc-100 mb-2" />
+  <div className="text-sm font-medium truncate" title={o.key}>{o.key.split("/").pop()}</div>
+  <div className="text-xs text-zinc-500">{fmt(o.size)} · {new Date(o.uploaded).toLocaleString()}</div>
+</div>
+
+// 列表视图，表头与每行第一列：
+<thead className="bg-zinc-50">
+  <tr>
+    <th className="w-8"></th>
+    <th className="text-left p-2">文件名</th>
+    <th className="text-left p-2">大小</th>
+    <th className="text-left p-2">时间</th>
+  </tr>
+</thead>
+<tbody>
+  {items.map((o) => (
+    <tr key={o.key} className="border-t">
+      <td className="p-2">
+        <input
+          type="checkbox"
+          checked={selected.includes(o.key)}
+          onChange={() => toggleSelect(o.key)}
+          title="选择"
+        />
+      </td>
+      <td className="p-2 truncate" title={o.key}>{o.key}</td>
+      <td className="p-2">{fmt(o.size)}</td>
+      <td className="p-2">{new Date(o.uploaded).toLocaleString()}</td>
+    </tr>
+  ))}
+</tbody>
       ) : (
         <div className="rounded-xl overflow-hidden border border-zinc-200">
           <table className="w-full text-sm">
