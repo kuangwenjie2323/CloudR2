@@ -1,9 +1,25 @@
-// 未来切换到 Pages Functions /api/* 时，仅需改此文件
-export async function listFiles(){
-// return fetch('/api/list').then(r=>r.json())
-return []
+export async function fetchR2List({ prefix = "", limit = 1000, cursor = null, delimiter = "/" } = {}) {
+  const params = new URLSearchParams({ prefix, limit, delimiter });
+  if (cursor) params.set("cursor", cursor);
+  const resp = await fetch(`/api/list?${params.toString()}`, {
+    headers: { "x-auth": localStorage.getItem("upload_token") || "" }
+  });
+  if (!resp.ok) throw new Error(`List failed: ${resp.status} ${await resp.text()}`);
+  return resp.json();
 }
 
+export async function uploadToR2(file, { prefix = "" } = {}) {
+  const token = localStorage.getItem("upload_token") || "";
+  const form = new FormData();
+  form.append("file", file);
+  form.append("filename", file.name || "upload.bin");
+  form.append("contentType", file.type || "application/octet-stream");
+  form.append("size", String(file.size || 0));
+  form.append("prefix", prefix);
+  const resp = await fetch("/api/upload", { method: "POST", headers: { "x-auth": token }, body: form });
+  if (!resp.ok) throw new Error(`Upload failed: ${resp.status} ${await resp.text()}`);
+  return resp.json();
+}
 
 export function uploadToR2WithProgress(file, { prefix = "", onProgress = () => {} } = {}) {
   const token = localStorage.getItem("upload_token") || "";
@@ -27,6 +43,4 @@ export function uploadToR2WithProgress(file, { prefix = "", onProgress = () => {
     form.append("prefix", prefix);
     xhr.send(form);
   });
-}
-
 }
