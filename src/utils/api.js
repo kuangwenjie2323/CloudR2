@@ -19,6 +19,29 @@ export async function deleteR2(keys = []) {
   if (!resp.ok) throw new Error(`Delete failed: ${resp.status} ${await resp.text()}`);
   return resp.json();
 }
+// —— 新建文件夹
+export async function mkdirR2(prefix) {
+  const token = localStorage.getItem("upload_token") || "";
+  const resp = await fetch("/api/mkdir", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-auth": token },
+    body: JSON.stringify({ prefix }),
+  });
+  if (!resp.ok) throw new Error(`Mkdir failed: ${resp.status} ${await resp.text()}`);
+  return resp.json();
+}
+
+// —— 批量移动
+export async function moveR2(keys = [], toPrefix, { overwrite = false, flatten = true } = {}) {
+  const token = localStorage.getItem("upload_token") || "";
+  const resp = await fetch("/api/move", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-auth": token },
+    body: JSON.stringify({ keys, toPrefix, overwrite, flatten }),
+  });
+  if (!resp.ok) throw new Error(`Move failed: ${resp.status} ${await resp.text()}`);
+  return resp.json();
+}
 
 export async function renameR2(from, to, { overwrite = false } = {}) {
   const token = localStorage.getItem("upload_token") || "";
