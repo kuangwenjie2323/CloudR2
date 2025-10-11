@@ -55,17 +55,30 @@ function sanitizeName(name) {
     .slice(0, 255) || `unnamed-${Date.now()}`;
 }
 
-function makeKey(prefix, filename) {
-  const d = new Date();
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const safe = sanitizeName(filename);
-  const uid = crypto.randomUUID();
-  const cleanPrefix = prefix ? prefix.replace(/^\/+/, "").replace(/\/+$/, "") + "/" : "";
-  return `${cleanPrefix}${y}/${m}/${day}/${uid}-${safe}`;
+function splitName(filename) {
+  const i = filename.lastIndexOf(".");
+  return i > 0 ? [filename.slice(0, i), filename.slice(i)] : [filename, ""];
 }
 
+async function ensureUniqueKey(R2, key) {
+  if (!(await R2.head(key))) return key;
+  const [base, ext] = splitName(key.split("/").pop()); // 只处理文件名部分
+  const dir = key.slice(0, key.lastIndexOf("/") + 1);
+  let n = 1;
+  while (n < 1000) {
+    const cand = `${dir}${base} (${n})${ext}`;
+    if (!(await R2.head(cand))) return cand;
+    n++;
+  }
+  // 兜底：uuid
+  return `${dir}${crypto.randomUUID()}-${base}${ext}`;
+}
+
+function makeKey(prefix, filename) {
+  const safe = sanitizeName(filename);
+  const dir = prefix ? prefix.replace(/^\/+/, "").replace(/\/+$/, "") + "/" : "";
+  return `${dir}${safe}`;
+}
 export const onRequestPost = async ({ request, env }) => {
   // 简单口令认证
   const token = request.headers.get("x-auth");
