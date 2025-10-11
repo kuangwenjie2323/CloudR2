@@ -15,15 +15,6 @@ import UploadButton from "./components/UploadButton.jsx"
 export default function App() {
   return (
     <div className="min-h-screen bg-zinc-50">
-      <header className="sticky top-0 bg-white/80 backdrop-blur border-b border-zinc-200 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="font-semibold">Cloud Files</div>
-          <div className="flex items-center gap-2">
-            <UploadButton />
-          </div>
-        </div>
-      </header>
-
       <main className="flex flex-col">
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
           <Topbar />
