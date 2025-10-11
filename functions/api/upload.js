@@ -70,8 +70,43 @@ async function ensureUniqueKey(R2, key) {
     if (!(await R2.head(cand))) return cand;
     n++;
   }
-  // 兜底：uuid
-  return `${dir}${crypto.randomUUID()}-${base}${ext}`;
+
+  // —— 工具：安全化文件名
+function sanitizeName(name = "") {
+  return name.replace(/[\\?%*:|"<>\r\n]/g, "_").trim();
+}
+
+// —— 工具：分离扩展名
+function splitExt(name) {
+  const i = name.lastIndexOf(".");
+  return i >= 0 ? [name.slice(0, i), name.slice(i)] : [name, ""];
+}
+
+// —— 生成“当前目录 + 原名”的 key（不加日期/uuid）
+function makeKey(prefix, filename) {
+  const dir = prefix ? prefix.replace(/^\/+/, "").replace(/\/+$/, "") + "/" : "";
+  const safe = sanitizeName(filename);
+  return `${dir}${safe}`;
+}
+
+// —— 若存在同名，则自动 name (1).ext / name (2).ext
+async function ensureUnique(R2, key) {
+  const exists = async (k) => !!(await R2.head(k));
+  if (!(await exists(key))) return key;
+
+  const slash = key.lastIndexOf("/");
+  const baseDir = slash >= 0 ? key.slice(0, slash + 1) : "";
+  const file = slash >= 0 ? key.slice(slash + 1) : key;
+  const [stem, ext] = splitExt(file);
+
+  let n = 1;
+  while (n < 1000) {
+    const cand = `${baseDir}${stem} (${n})${ext}`;
+    if (!(await exists(cand))) return cand;
+    n++;
+  }
+  // 极端兜底：加 uuid
+  return `${baseDir}${crypto.randomUUID()}-${file}`;
 }
 
 function makeKey(prefix, filename) {
@@ -90,13 +125,24 @@ export const onRequestPost = async ({ request, env }) => {
   if (!ct.startsWith("multipart/form-data")) {
     return new Response(JSON.stringify({ error: "Use multipart/form-data" }), { status: 400 });
   }
+  // —— 处理上传的主逻辑里（put 之前）这样用：
+const clientPrefix = formData.get("prefix") || "";       // 前端带来的当前目录
+const origName = formData.get("filename") || "upload.bin";
 
+let key = makeKey(clientPrefix, origName);               // 先生成“当前目录 + 原名”
+key = await ensureUnique(env.R2, key);                   // 若重名，自动递增
+await env.R2.put(key, file.stream(), { /* httpMetadata 等 */ });
+
+// 最终返回给前端
+return new Response(JSON.stringify({ key }), {
+  headers: { "content-type": "application/json; charset=utf-8" }
+});
   const form = await request.formData();
   const file = form.get("file");
   if (!file?.stream) {
     return new Response(JSON.stringify({ error: "file field missing" }), { status: 400 });
   }
-
+  
   const clientPrefix = (form.get("prefix") || "").toString();
   const origName = (form.get("filename") || file.name || "upload.bin").toString();
   let contentType = (form.get("contentType") || file.type || "application/octet-stream").toString();
