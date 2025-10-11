@@ -33,7 +33,7 @@ if (!PUBLIC_LIST) {
   const R2 = getR2(env);
   const res = await R2.list({ prefix, limit, cursor, delimiter });
 
-  const objects = (res.objects || []).map(o => ({
+  let objects = (res.objects || []).map(o => ({
     key: o.key,
     size: o.size,
     etag: o.httpEtag,
