@@ -1,15 +1,15 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App'
-import { Provider } from './app/store.jsx'   // ⬅️ 引入 Provider
-import './styles/tokens.css'
-import './styles/index.css'
+export async function fetchR2List({ prefix = "", limit = 1000, cursor = null, delimiter = "/" } = {}) {
+  const params = new URLSearchParams({ prefix, limit, delimiter });
+  if (cursor) params.set("cursor", cursor);
 
-createRoot(document.getElementById('root')).render(
-  <Provider>                      {/* ⬅️ 用 Provider 包裹 */}
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </Provider>
-)
+  const resp = await fetch(`/api/list?${params.toString()}`, {
+    headers: {
+      "x-auth": localStorage.getItem("upload_token") || ""  // 简单示例
+    }
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`List failed: ${resp.status} ${text}`);
+    }
+  return resp.json();
+}
