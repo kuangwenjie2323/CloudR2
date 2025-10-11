@@ -19,10 +19,16 @@ export const onRequestGet = async ({ request, env }) => {
   const cursor = url.searchParams.get("cursor") || undefined;
   const delimiter = url.searchParams.get("delimiter") ?? "/";
 
+ const PUBLIC_LIST = (env.LIST_PUBLIC === "1" || env.LIST_PUBLIC === "true");
+
+// …… onRequestGet 里，替换鉴权逻辑：
+if (!PUBLIC_LIST) {
   const token = request.headers.get("x-auth");
   if (env.UPLOAD_TOKEN && token !== env.UPLOAD_TOKEN) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
+}
+
 
   const R2 = getR2(env);
   const res = await R2.list({ prefix, limit, cursor, delimiter });
