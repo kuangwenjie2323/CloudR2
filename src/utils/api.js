@@ -9,6 +9,28 @@ export async function fetchR2List({ prefix = "", limit = 1000, cursor = null, de
   return resp.json();
 }
 
+export async function deleteR2(keys = []) {
+  const token = localStorage.getItem("upload_token") || "";
+  const resp = await fetch("/api/delete", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-auth": token },
+    body: JSON.stringify({ keys })
+  });
+  if (!resp.ok) throw new Error(`Delete failed: ${resp.status} ${await resp.text()}`);
+  return resp.json();
+}
+
+export async function renameR2(from, to, { overwrite = false } = {}) {
+  const token = localStorage.getItem("upload_token") || "";
+  const resp = await fetch("/api/rename", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-auth": token },
+    body: JSON.stringify({ from, to, overwrite })
+  });
+  if (!resp.ok) throw new Error(`Rename failed: ${resp.status} ${await resp.text()}`);
+  return resp.json();
+}
+
 export async function uploadToR2(file, { prefix = "" } = {}) {
   const token = localStorage.getItem("upload_token") || "";
   const form = new FormData();
