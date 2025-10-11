@@ -1,21 +1,21 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
-
-// 如果有全局样式就保留这行（没有就删掉）
 import "./styles/index.css";
 
-// —— 从工具模块导入 API 函数
+// —— API 函数集中导入并挂到 window（方便控制台调试）
 import { fetchR2List, uploadToR2, uploadToR2WithProgress } from "./utils/api.js";
-
-// —— 为了方便控制台调试，挂到 window；同时也防止被 tree-shaking 掉
 if (typeof window !== "undefined") {
   Object.assign(window, { fetchR2List, uploadToR2, uploadToR2WithProgress });
 }
 
-// —— 挂载 React 应用（这是你页面空白的根因）
+// —— 恢复 Router（解决 “Cannot destructure 'future' … is null”）
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    {/* react-router v6 的 BrowserRouter 也接受 future 标志 */}
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
