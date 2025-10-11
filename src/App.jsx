@@ -5,6 +5,12 @@ import Sidebar from './components/layout/Sidebar'
 import BottomNav from './components/layout/BottomNav'
 import TaskDrawer from './components/layout/TaskDrawer'
 
+import { fetchR2List, uploadToR2, uploadToR2WithProgress } from "./utils/api";
+
+// 仅用于调试：把 API 挂到 window 方便你在控制台调用
+if (typeof window !== "undefined") {
+  Object.assign(window, { fetchR2List, uploadToR2, uploadToR2WithProgress });
+}
 
 export default function App() {
 return (
