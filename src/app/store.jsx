@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState } from "react";
 
-// 任务结构：{ id, name, size, status: 'pending'|'uploading'|'done'|'error', pct, loaded, total, speed, key?, error? }
+// 统一的上下文默认值，避免未包 Provider 时解构报错
 const defaultCtx = {
   view: "grid", setView: () => {},
   prefix: "", setPrefix: () => {},
@@ -12,16 +12,9 @@ const Ctx = createContext(defaultCtx);
 
 export function Provider({ children }) {
   const [view, setView] = useState("grid");
-  const [prefix, setPrefix] = useState(""); // 形如 "photos/2025/"
+  const [prefix, setPrefix] = useState("");
   const [tasks, setTasks] = useState([]);
-
-  const addTask = (t) => setTasks((xs) => [...xs, t]);
-  const updateTask = (id, patch) =>
-    setTasks((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
-  const removeTask = (id) => setTasks((xs) => xs.filter((x) => x.id !== id));
-  const clearDone = () => setTasks((xs) => xs.filter((x) => x.status !== "done"));
-
- const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState([]);
 
   const addTask = (t) => setTasks((xs) => [...xs, t]);
   const updateTask = (id, patch) => setTasks((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
