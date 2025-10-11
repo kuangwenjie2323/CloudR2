@@ -25,7 +25,9 @@ export default function UploadButton({ className = "" }) {
       })
         .then((res) => {
           updateTask(id, { status: "done", pct: 100, key: res.key });
-        })
+        // ✅ 上传成功后通知页面刷新列表
+          window.dispatchEvent(new CustomEvent("r2:reload"));
+        })  
         .catch((err) => {
           updateTask(id, { status: "error", error: String(err?.message || err) });
         });
