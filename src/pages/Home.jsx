@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import useR2List from "../hooks/useR2List";
 import { useStore } from "../app/store";
 
@@ -12,6 +12,11 @@ const fmt = (n) => {
 export default function Home() {
   const { view, setView, prefix, setPrefix } = useStore();
   const { items, folders, loading, error, cursor, loadMore, reload } = useR2List(prefix);
+  useEffect(() => {
+  const h = () => reload();
+  window.addEventListener("r2:reload", h);
+  return () => window.removeEventListener("r2:reload", h);
+}, [reload, prefix]);
 
   return (
     <div className="p-4 space-y-4">
