@@ -1,22 +1,20 @@
-// 轻量全局状态（可替换为 Zustand/Recoil；此处保持零依赖）
-import { createContext, useContext, useMemo, useState } from "react";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Home from "../pages/Home";
+import Uploads from "../pages/Uploads";
+import Search from "../pages/Search";
+import RecycleBin from "../pages/RecycleBin";
+import Settings from "../pages/Settings";
 
-// —— 安全默认值，避免未包 Provider 时的解构报错
-const defaultCtx = {
-  view: "grid",
-  setView: () => {},
-  tasks: [],
-  setTasks: () => {},
-};
-
-const Ctx = createContext(defaultCtx);
-
-export function Provider({ children }) {
-  const [view, setView] = useState("grid"); // 'list' | 'grid'
-  const [tasks, setTasks] = useState([]);   // 上传/下载任务
-
-  const api = useMemo(() => ({ view, setView, tasks, setTasks }), [view, tasks]);
-  return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
+export default function RoutesView() {
+  return (
+    <Routes>
+      <Route index element={<Home />} />
+      <Route path="/uploads" element={<Uploads />} />
+      <Route path="/search" element={<Search />} />
+      <Route path="/recycle" element={<RecycleBin />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
-
-export const useStore = () => useContext(Ctx);
