@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import "./styles/index.css";
 
 // —— 把全局状态 Provider 包回入口（修复 useContext null）
-import { Provider } from "./store.jsx"; // 如果你的 store 在 src/app/store.jsx，则改成 "./app/store.jsx"
+import { Provider } from "./app/store.jsx"; // 如果你的 store 在 src/app/store.jsx，则改成 "./app/store.jsx"
 
 // —— API 函数集中导入并挂到 window（方便控制台调试）
 import { fetchR2List, uploadToR2, uploadToR2WithProgress } from "./utils/api.js";
