@@ -23,12 +23,27 @@ background: rgba(var(--card), 0.7);
   }
 }
 
-/* 工具类：为底部固定元素留出安全区（内容不被盖住） */
+@layer base {
+  :root{ --tabbar-h: 60px; }
+}
+
 @layer utilities {
-  .pb-safe {
-    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  .pb-safe { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+  .bottom-drawer { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+
+  /* 任务胶囊：统一停靠到底栏上方 12px */
+  .task-pill {
+    position: fixed;
+    right: 12px;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);
+    z-index: 41;
   }
-  .bottom-drawer {
-    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  /* 进入多选时，弱化胶囊以免抢点击 */
+  @media (max-width: 767px){
+    body[data-mode="select"] .task-pill{
+      opacity: .35; pointer-events: none; transform: translateY(8px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
   }
 }
+
