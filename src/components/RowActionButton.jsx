@@ -1,62 +1,92 @@
 // src/components/RowActionButton.jsx
-import React, { useRef, useState } from "react";
+import React, {useEffect, useRef, useState } from "react";
 import ActionMenu from "./ActionMenu";
+import { createPortal } from "react-dom";
 
+// 这个组件就是你三点菜单的按钮 + 弹层
 export default function RowActionButton({ obj, openFromContext }) {
   const btnRef = useRef(null);
   const [open, setOpen] = useState(false);
-  const [ctxPos, setCtxPos] = useState(null);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
 
-  // 右键/长按也用这个组件打开
-  React.useEffect(() => {
-    if (!openFromContext) return;
-    setCtxPos(openFromContext);
-    setOpen(true);
-  }, [openFromContext]);
-
-  // 移动端长按
-  React.useEffect(() => {
+  // 打开菜单（点击三点）
+  function openMenuFromButton() {
     const el = btnRef.current;
     if (!el) return;
-    let timer = null;
-    const onTouchStart = e => {
-      timer = setTimeout(() => {
-        setCtxPos({x: e.touches[0].clientX, y: e.touches[0].clientY});
-        setOpen(true);
-      }, 500);
-    };
-    const clear = () => { if (timer) clearTimeout(timer); };
-    el.addEventListener("touchstart", onTouchStart, {passive: true});
-    el.addEventListener("touchend", clear, {passive: true});
-    el.addEventListener("touchcancel", clear, {passive: true});
+    const r = el.getBoundingClientRect();
+    setPos({ x: r.right, y: r.bottom + 6 });
+    setOpen(true);
+  }
+
+  // 右键打开传入的位置（已有）
+  useEffect(() => {
+    if (openFromContext) {
+      setPos({ x: openFromContext.x, y: openFromContext.y });
+      setOpen(true);
+    }
+  }, [openFromContext]);
+
+  // 点击外部/Esc 关闭
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
     return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchend", clear);
-      el.removeEventListener("touchcancel", clear);
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [open]);
 
   return (
     <>
       <button
         ref={btnRef}
-        className="px-2 py-1 rounded hover:bg-zinc-100 text-xl leading-none"
+        type="button"
+        className="p-1 rounded hover:bg-zinc-200"
         aria-label="更多操作"
-        onClick={() => { setCtxPos(null); setOpen(true); }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(true); }
-        }}
+        onClick={openMenuFromButton}
+        onMouseDown={(e) => e.stopPropagation()}
       >
-        ···
+        ⋯
       </button>
-      {open && (
-        <ActionMenu
-          obj={obj}
-          anchorRef={btnRef}
-          ctxPos={ctxPos}
-          onClose={() => setOpen(false)}
-        />
-      )}
+
+      {/* ⚠️ 这里用 createPortal 渲染到 body */}
+      {open && typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed z-50 min-w-40 rounded-xl border border-zinc-200 bg-white shadow-xl"
+            style={{ left: pos.x, top: pos.y }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <MenuItem label="下载" onClick={() => {/* TODO */}} />
+            <MenuItem label="重命名" onClick={() => {/* TODO 调 renameR2 */}} />
+            <MenuDivider />
+            <MenuItem label="复制链接" onClick={() => {/* TODO 调 getPublicUrl */}} />
+            <MenuItem label="删除" danger onClick={() => {/* TODO 调 deleteR2 */}} />
+          </div>,
+          document.body
+        )
+      }
     </>
   );
+}
+
+function MenuItem({ label, onClick, danger }) {
+  return (
+    <button
+      className={
+        "w-full text-left px-3 py-2 text-sm hover:bg-zinc-100 " +
+        (danger ? "text-red-600" : "text-zinc-800")
+      }
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function MenuDivider() {
+  return <div className="h-px bg-zinc-200 my-1" />;
 }
