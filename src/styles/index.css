@@ -15,3 +15,20 @@ backdrop-filter: blur(var(--blur));
 background: rgba(var(--card), 0.7);
 }
 }
+
+
+@layer base {
+  :root{
+    --tabbar-h: 60px;           /* 你的底部导航或任务栏高度：按需改 */
+  }
+}
+
+/* 工具类：为底部固定元素留出安全区（内容不被盖住） */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  }
+  .bottom-drawer {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  }
+}
