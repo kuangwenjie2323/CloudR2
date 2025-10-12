@@ -13,7 +13,7 @@ return (
 <div key={i} className="p-3 border rounded-xl bg-white">
 <div className="font-medium text-sm">{t.name}</div>
 <div className="h-2 bg-zinc-100 rounded mt-1">
-<div className="h-2 bg-primary rounded" style={{width:`${t.progress||0}%`}}/>
+<div className="h-2 bg-zinc-900 rounded" style={{width:`${t.progress||0}%`}}/>
 </div>
 </div>
 ))}
