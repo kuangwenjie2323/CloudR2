@@ -89,6 +89,36 @@ export default function Home() {
           <div className="text-lg font-semibold">
             我的文件 <span className="text-zinc-400">{prefix || "/"}</span>
           </div>
+      {/* 顶部栏：左侧搜索入口 + 中间标题 + 右侧刷新/视图切换 */}
+      <header className="sticky top-0 z-10 -mx-4 px-4 h-[56px] flex items-center justify-between bg-white/90 backdrop-blur border-b border-zinc-100">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* 移动端：用图标跳转到搜索页 */}
+          <button
+            onClick={() => (window.location.hash = "#/search")}
+            className="px-3 py-1 rounded bg-zinc-200 md:hidden"
+            aria-label="搜索"
+            title="搜索"
+          >🔍</button>
+
+          {/* ≥md：再显示真正的搜索输入/组件（你以后可以在 Search.jsx 里封装一个输入组件） */}
+          <div className="hidden md:block w-[240px]">
+            {/* 这里先留空位或挂你的 SearchInput 组件 */}
+          </div>
+        </div>
+
+        <div className="text-lg font-semibold text-center flex-1 px-4">
+          我的文件 <span className="text-zinc-400">{prefix || "/"}</span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button onClick={reload} className="px-3 py-1 rounded bg-zinc-200">刷新</button>
+          <button
+            onClick={() => setView(view === "grid" ? "list" : "grid")}
+            className="px-3 py-1 rounded bg-zinc-200"
+            title="切换视图"
+          >
+            {view === "grid" ? "列表视图" : "网格视图"}
+          </button>
         </div>
       </header>
 
