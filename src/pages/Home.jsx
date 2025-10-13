@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import useR2List from "../hooks/useR2List";
 import { useStore } from "../app/store";
 import ActionBar from "../components/ActionBar";
 import RowActionButton from "../components/RowActionButton";
+import PreviewModal from "../components/PreviewModal";
+import { deleteR2, moveR2, renameR2 } from "../utils/api";
 
 const fmt = (n) => {
   if (n == null) return "-";
@@ -12,10 +14,23 @@ const fmt = (n) => {
   return `${x.toFixed(1)} ${u[i]}`;
 };
 
+const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+
 export default function Home() {
-  const { view, setView, prefix, setPrefix, selected, toggleSelect } = useStore();
+  const {
+    view,
+    setView,
+    prefix,
+    setPrefix,
+    selected,
+    toggleSelect,
+    clearSelection,
+    addTask,
+    updateTask
+  } = useStore();
   const { items, folders, loading, error, cursor, loadMore, reload } = useR2List(prefix);
   const [ctx, setCtx] = useState(null); // { key, x, y } 右键/长按菜单位置
+  const [previewFile, setPreviewFile] = useState(null);
 
   // 100vh 兼容：iOS 地址栏折叠/展开导致高度漂移
   useEffect(() => {
@@ -35,6 +50,87 @@ export default function Home() {
   }, [reload, prefix]);
 
   const hasSelected = selected.length > 0;
+
+  const handleCloseMenu = useCallback(() => setCtx(null), []);
+
+  const handlePreview = useCallback((file) => {
+    if (!file) return;
+    setPreviewFile(file);
+  }, []);
+
+  const handleClosePreview = useCallback(() => {
+    setPreviewFile(null);
+  }, []);
+
+  const handleDelete = useCallback(
+    async (file) => {
+      if (!file?.key) return;
+
+      const id = uid();
+      addTask({ id, name: `删除 ${file.key}`, status: "pending", pct: 0 });
+      try {
+        await deleteR2([file.key]);
+        updateTask(id, { status: "done", pct: 100 });
+        window.dispatchEvent(new CustomEvent("r2:reload"));
+        clearSelection();
+      } catch (e) {
+        updateTask(id, { status: "error", error: String(e?.message || e) });
+        alert(`删除失败：${String(e?.message || e)}`);
+      }
+    },
+    [addTask, clearSelection, updateTask]
+  );
+
+  const handleRename = useCallback(
+    async (file) => {
+      if (!file?.key) return;
+
+      const from = file.key;
+      const oldName = from.split("/").pop();
+      const input = prompt("输入新文件名（可包含子路径，相对当前目录）:", oldName);
+      if (!input) return;
+
+      const to = input.includes("/") ? input : from.replace(/[^/]+$/, input);
+
+      const id = uid();
+      addTask({ id, name: `重命名 ${oldName} → ${input}`, status: "pending", pct: 0 });
+      try {
+        await renameR2(from, to, { overwrite: false });
+        updateTask(id, { status: "done", pct: 100 });
+        window.dispatchEvent(new CustomEvent("r2:reload"));
+        clearSelection();
+      } catch (e) {
+        updateTask(id, { status: "error", error: String(e?.message || e) });
+        alert(`重命名失败：${String(e?.message || e)}`);
+      }
+    },
+    [addTask, clearSelection, updateTask]
+  );
+
+  const handleMove = useCallback(
+    async (file) => {
+      if (!file?.key) return;
+
+      const to = prompt(
+        "移动到哪个文件夹？（相对路径，如 photos/2025/；留空表示根目录）",
+        prefix || ""
+      );
+      if (to == null) return;
+
+      const id = uid();
+      addTask({ id, name: `移动 ${file.key} → ${to || "/"}`, status: "pending", pct: 0 });
+      try {
+        await moveR2([file.key], to || "", { overwrite: false, flatten: true });
+        updateTask(id, { status: "done", pct: 100 });
+        window.dispatchEvent(new CustomEvent("r2:reload"));
+        clearSelection();
+      } catch (e) {
+        updateTask(id, { status: "error", error: String(e?.message || e) });
+        alert(`移动失败：${String(e?.message || e)}`);
+      }
+    },
+    [addTask, clearSelection, prefix, updateTask]
+  );
 
 
   // hasSelected 已存在
@@ -134,16 +230,21 @@ export default function Home() {
       {view === "grid" ? (
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
           {items.map((o) => (
-            <CardGrid
-              key={o.key}
-              obj={o}
-              isChecked={selected.includes(o.key)}
-              onToggle={() => toggleSelect(o.key)}
-              onContext={(x, y) => setCtx({ key: o.key, x, y })}
-              bindLongPress={bindLongPress}
-              openFromContext={ctx?.key === o.key ? { x: ctx.x, y: ctx.y } : null}
-            />
-          ))}
+              <CardGrid
+                key={o.key}
+                obj={o}
+                isChecked={selected.includes(o.key)}
+                onToggle={() => toggleSelect(o.key)}
+                onContext={(x, y) => setCtx({ key: o.key, x, y })}
+                bindLongPress={bindLongPress}
+                openFromContext={ctx?.key === o.key ? { x: ctx.x, y: ctx.y } : null}
+                onPreview={handlePreview}
+                onRename={handleRename}
+                onMove={handleMove}
+                onDelete={handleDelete}
+                onMenuClose={handleCloseMenu}
+              />
+            ))}
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden border border-zinc-200">
@@ -167,6 +268,11 @@ export default function Home() {
                   onContext={(x, y) => setCtx({ key: o.key, x, y })}
                   bindLongPress={bindLongPress}
                   openFromContext={ctx?.key === o.key ? { x: ctx.x, y: ctx.y } : null}
+                  onPreview={handlePreview}
+                  onRename={handleRename}
+                  onMove={handleMove}
+                  onDelete={handleDelete}
+                  onMenuClose={handleCloseMenu}
                 />
               ))}
             </tbody>
@@ -194,12 +300,25 @@ export default function Home() {
           <ActionBar items={items} />
         </div>
       </div>
+      <PreviewModal file={previewFile} open={Boolean(previewFile)} onClose={handleClosePreview} />
     </div>
   );
 }
 
 /** ------- 子组件：网格卡片 ------- */
-function CardGrid({ obj, isChecked, onToggle, onContext, bindLongPress, openFromContext }) {
+function CardGrid({
+  obj,
+  isChecked,
+  onToggle,
+  onContext,
+  bindLongPress,
+  openFromContext,
+  onPreview,
+  onRename,
+  onMove,
+  onDelete,
+  onMenuClose
+}) {
   const ref = useRef(null);
   useEffect(() => bindLongPress?.(ref.current, obj.key), [ref.current]);
 
@@ -223,7 +342,15 @@ function CardGrid({ obj, isChecked, onToggle, onContext, bindLongPress, openFrom
       />
       {/* 顶角三点（hover 才出现；移动端靠长按） */}
       <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <RowActionButton obj={obj} openFromContext={openFromContext} />
+        <RowActionButton
+          obj={obj}
+          openFromContext={openFromContext}
+          onPreview={onPreview}
+          onRename={onRename}
+          onMove={onMove}
+          onDelete={onDelete}
+          onMenuClose={onMenuClose}
+        />
       </div>
       <div className="aspect-video rounded-xl bg-zinc-100 mb-2" />
       <div className="text-sm font-medium truncate" title={obj.key}>{obj.key.split("/").pop()}</div>
@@ -233,7 +360,19 @@ function CardGrid({ obj, isChecked, onToggle, onContext, bindLongPress, openFrom
 }
 
 /** ------- 子组件：列表行 ------- */
-function RowList({ obj, isChecked, onToggle, onContext, bindLongPress, openFromContext }) {
+function RowList({
+  obj,
+  isChecked,
+  onToggle,
+  onContext,
+  bindLongPress,
+  openFromContext,
+  onPreview,
+  onRename,
+  onMove,
+  onDelete,
+  onMenuClose
+}) {
   const ref = useRef(null);
   useEffect(() => bindLongPress?.(ref.current, obj.key), [ref.current]);
 
@@ -252,7 +391,15 @@ function RowList({ obj, isChecked, onToggle, onContext, bindLongPress, openFromC
       <td className="p-2">{new Date(obj.uploaded).toLocaleString()}</td>
       <td className="p-2 text-right">
         <div className="opacity-0 group-hover:opacity-100 transition-opacity inline-block">
-          <RowActionButton obj={obj} openFromContext={openFromContext} />
+          <RowActionButton
+            obj={obj}
+            openFromContext={openFromContext}
+            onPreview={onPreview}
+            onRename={onRename}
+            onMove={onMove}
+            onDelete={onDelete}
+            onMenuClose={onMenuClose}
+          />
         </div>
       </td>
     </tr>
