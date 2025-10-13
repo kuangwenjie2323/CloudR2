@@ -15,7 +15,7 @@ import UploadButton from "./components/UploadButton.jsx"
 export default function App() {
   return (
     <div className="app bg-zinc-50">
-      <main className="app-main flex flex-col">
+      <main className="app-main flex flex-col pb-safe lg:pb-0">
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
           <Topbar />
         </div>
@@ -23,11 +23,10 @@ export default function App() {
         <section className="flex-1 min-h-0 p-3 sm:p-6">
           <RoutesView />
         </section>
-
-        <div className="lg:hidden sticky bottom-0 z-40">
-          <BottomNav />
-        </div>
       </main>
+
+      {/* 移动端底部导航单独固定，避免撑开主内容高度 */}
+      <BottomNav />
 
       {/* 浮动任务抽屉 */}
       <TaskDrawer />
