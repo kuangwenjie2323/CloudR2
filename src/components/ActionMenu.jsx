@@ -3,7 +3,16 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 // 传入：obj（当前文件对象）, anchorRef（按钮ref）, ctxPos（右键/长按坐标，可为空）, onClose()
-export default function ActionMenu({ obj, anchorRef, ctxPos, onClose }) {
+export default function ActionMenu({
+  obj,
+  anchorRef,
+  ctxPos,
+  onClose,
+  onPreview,
+  onRename,
+  onMove,
+  onDelete
+}) {
   const menuRef = useRef(null);
   const [pos, setPos] = useState({ x: 0, y: 0 }); // 屏幕坐标
   const [ready, setReady] = useState(false);
@@ -84,20 +93,40 @@ export default function ActionMenu({ obj, anchorRef, ctxPos, onClose }) {
       style={{ position: "fixed", left: pos.x, top: pos.y, opacity: ready ? 1 : 0 }}
       role="menu"
     >
-      <button className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
-              onClick={() => { /* TODO: 预览/打开 */ onClose?.(); }}>
+      <button
+        className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
+        onClick={async () => {
+          await onPreview?.(obj);
+          onClose?.();
+        }}
+      >
         预览/打开
       </button>
-      <button className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
-              onClick={() => { /* TODO: 重命名 */ onClose?.(); }}>
+      <button
+        className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
+        onClick={async () => {
+          await onRename?.(obj);
+          onClose?.();
+        }}
+      >
         重命名
       </button>
-      <button className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
-              onClick={() => { /* TODO: 移动到 */ onClose?.(); }}>
+      <button
+        className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
+        onClick={async () => {
+          await onMove?.(obj);
+          onClose?.();
+        }}
+      >
         移动到
       </button>
-      <button className="block w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600"
-              onClick={() => { /* TODO: 删除 */ onClose?.(); }}>
+      <button
+        className="block w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600"
+        onClick={async () => {
+          await onDelete?.(obj);
+          onClose?.();
+        }}
+      >
         删除
       </button>
     </div>

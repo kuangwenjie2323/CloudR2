@@ -2,7 +2,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import ActionMenu from "./ActionMenu";
 
-export default function RowActionButton({ obj, openFromContext }) {
+export default function RowActionButton({
+  obj,
+  openFromContext,
+  onPreview,
+  onRename,
+  onMove,
+  onDelete,
+  onMenuClose
+}) {
   const btnRef = useRef(null);
   const [open, setOpen] = useState(false);
 
@@ -36,7 +44,14 @@ export default function RowActionButton({ obj, openFromContext }) {
           obj={obj}
           anchorRef={btnRef}
           ctxPos={openFromContext}
-          onClose={() => setOpen(false)}
+          onPreview={onPreview}
+          onRename={onRename}
+          onMove={onMove}
+          onDelete={onDelete}
+          onClose={() => {
+            setOpen(false);
+            onMenuClose?.();
+          }}
         />
       )}
     </>
