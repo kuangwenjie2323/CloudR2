@@ -7,14 +7,7 @@ import PreviewModal from "../components/PreviewModal";
 import FolderPickerDialog from "../components/FolderPickerDialog";
 import { deleteR2, renameR2 } from "../utils/api";
 import useMoveTask from "../hooks/useMoveTask";
-
-const fmt = (n) => {
-  if (n == null) return "-";
-  const u = ["B", "KB", "MB", "GB", "TB"];
-  let i = 0, x = n;
-  while (x >= 1024 && i < u.length - 1) { x /= 1024; i++; }
-  return `${x.toFixed(1)} ${u[i]}`;
-};
+import { formatBytes, formatDateTime } from "../utils/format";
 
 const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 
@@ -268,9 +261,9 @@ export default function Home() {
             <thead className="bg-zinc-50">
               <tr>
                 <th className="w-8"></th>
-                <th className="text-left p-2 w-[52vw]">文件名</th>
-                <th className="text-left p-2">大小</th>
-                <th className="text-left p-2">时间</th>
+                <th className="text-left p-2">文件名</th>
+                <th className="text-left p-2 hidden md:table-cell">大小</th>
+                <th className="text-left p-2 hidden md:table-cell">时间</th>
                 <th className="text-right p-2 w-10"></th>
               </tr>
             </thead>
@@ -376,7 +369,7 @@ function CardGrid({
       </div>
       <div className="aspect-video rounded-xl bg-zinc-100 mb-2" />
       <div className="text-sm font-medium truncate" title={obj.key}>{obj.key.split("/").pop()}</div>
-      <div className="text-xs text-zinc-500">{fmt(obj.size)} · {new Date(obj.uploaded).toLocaleString()}</div>
+      <div className="text-xs text-zinc-500">{formatBytes(obj.size)} · {formatDateTime(obj.uploaded)}</div>
     </div>
   );
 }
@@ -398,6 +391,8 @@ function RowList({
   const ref = useRef(null);
   useEffect(() => bindLongPress?.(ref.current, obj.key), [ref.current]);
 
+  const displayName = obj?.key?.split("/").filter(Boolean).pop() || obj?.key;
+
   const onContextMenu = (e) => {
     e.preventDefault();
     onContext?.(e.clientX, e.clientY);
@@ -405,13 +400,20 @@ function RowList({
 
   return (
     <tr ref={ref} className="border-t group" tabIndex={0} onContextMenu={onContextMenu}>
-      <td className="p-2">
+      <td className="p-2 align-top">
         <input type="checkbox" checked={isChecked} onChange={onToggle} title="选择" />
       </td>
-      <td className="p-2 truncate max-w-[52vw]" title={obj.key}>{obj.key}</td>
-      <td className="p-2">{fmt(obj.size)}</td>
-      <td className="p-2">{new Date(obj.uploaded).toLocaleString()}</td>
-      <td className="p-2 text-right">
+      <td className="p-2" title={obj.key}>
+        <div className="truncate font-medium text-zinc-700">{displayName}</div>
+        {/* 移动端：把体积/时间信息折叠到名称下方，避免列宽不足时重叠 */}
+        <div className="md:hidden mt-1 text-xs text-zinc-500 flex flex-wrap gap-x-2 gap-y-1">
+          <span>{formatBytes(obj.size)}</span>
+          <span>{formatDateTime(obj.uploaded)}</span>
+        </div>
+      </td>
+      <td className="p-2 hidden md:table-cell">{formatBytes(obj.size)}</td>
+      <td className="p-2 hidden md:table-cell">{formatDateTime(obj.uploaded)}</td>
+      <td className="p-2 text-right align-top">
         <div className="opacity-0 group-hover:opacity-100 transition-opacity inline-block">
           <RowActionButton
             obj={obj}

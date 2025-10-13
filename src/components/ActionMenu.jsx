@@ -1,6 +1,7 @@
 // src/components/ActionMenu.jsx
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { formatBytes, formatDateTime } from "../utils/format";
 
 // 传入：obj（当前文件对象）, anchorRef（按钮ref）, ctxPos（右键/长按坐标，可为空）, onClose()
 export default function ActionMenu({
@@ -93,6 +94,16 @@ export default function ActionMenu({
       style={{ position: "fixed", left: pos.x, top: pos.y, opacity: ready ? 1 : 0 }}
       role="menu"
     >
+      {/* 顶部信息摘要：在紧凑视口内，把尺寸/时间信息集中到菜单中，减少主列表的拥挤程度 */}
+      <div className="px-2 pb-2 mb-2 border-b text-xs text-zinc-500">
+        <div className="text-sm font-medium text-zinc-700 break-all mb-1">
+          {obj?.key?.split("/").filter(Boolean).pop() || obj?.key || ""}
+        </div>
+        <div className="flex flex-wrap gap-x-2 gap-y-1">
+          <span>大小 {formatBytes(obj?.size)}</span>
+          <span>时间 {formatDateTime(obj?.uploaded)}</span>
+        </div>
+      </div>
       <button
         className="block w-full text-left px-3 py-2 rounded hover:bg-zinc-100"
         onClick={async () => {
