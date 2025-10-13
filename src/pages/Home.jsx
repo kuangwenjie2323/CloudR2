@@ -36,6 +36,13 @@ export default function Home() {
 
   const hasSelected = selected.length > 0;
 
+
+  // hasSelected 已存在
+  useEffect(() => {
+    document.body.dataset.mode = selected.length > 0 ? 'select' : 'browse';
+    return () => { delete document.body.dataset.mode; };
+  }, [selected.length]);
+
   // 长按辅助：移动端 300ms 长按打开 RowActionButton（模拟右键）
   const bindLongPress = (el, key) => {
     if (!el) return;
