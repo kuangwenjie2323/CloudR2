@@ -170,7 +170,8 @@ export default function Home() {
   };
 
   return (
-    <div className="px-4 space-y-4 pb-6 lg:pb-8">
+    // 统一加上 pb-safe，避免底部导航遮挡最后一行内容
+    <div className="px-4 space-y-4 pb-safe lg:pb-8">
       {/* 顶部栏：左侧搜索入口 + 中间标题 + 右侧刷新/视图切换 */}
       <header className="sticky top-0 z-10 -mx-4 px-4 h-[56px] flex items-center justify-between bg-white/90 backdrop-blur border-b border-zinc-100">
         <div className="flex items-center gap-2 flex-shrink-0">
