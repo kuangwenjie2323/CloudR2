@@ -4,7 +4,9 @@ import { useStore } from "../app/store";
 import ActionBar from "../components/ActionBar";
 import RowActionButton from "../components/RowActionButton";
 import PreviewModal from "../components/PreviewModal";
-import { deleteR2, moveR2, renameR2 } from "../utils/api";
+import FolderPickerDialog from "../components/FolderPickerDialog";
+import { deleteR2, renameR2 } from "../utils/api";
+import useMoveTask from "../hooks/useMoveTask";
 
 const fmt = (n) => {
   if (n == null) return "-";
@@ -31,6 +33,11 @@ export default function Home() {
   const { items, folders, loading, error, cursor, loadMore, reload } = useR2List(prefix);
   const [ctx, setCtx] = useState(null); // { key, x, y } 右键/长按菜单位置
   const [previewFile, setPreviewFile] = useState(null);
+  const moveTask = useMoveTask();
+  // —— 控制“移动到”弹窗的状态（批量/单个复用同一套逻辑）
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [pendingMoveKeys, setPendingMoveKeys] = useState([]);
+  const [moving, setMoving] = useState(false);
 
   // 100vh 兼容：iOS 地址栏折叠/展开导致高度漂移
   useEffect(() => {
@@ -108,29 +115,38 @@ export default function Home() {
   );
 
   const handleMove = useCallback(
-    async (file) => {
-      if (!file?.key) return;
-
-      const to = prompt(
-        "移动到哪个文件夹？（相对路径，如 photos/2025/；留空表示根目录）",
-        prefix || ""
-      );
-      if (to == null) return;
-
-      const id = uid();
-      addTask({ id, name: `移动 ${file.key} → ${to || "/"}`, status: "pending", pct: 0 });
-      try {
-        await moveR2([file.key], to || "", { overwrite: false, flatten: true });
-        updateTask(id, { status: "done", pct: 100 });
-        window.dispatchEvent(new CustomEvent("r2:reload"));
-        clearSelection();
-      } catch (e) {
-        updateTask(id, { status: "error", error: String(e?.message || e) });
-        alert(`移动失败：${String(e?.message || e)}`);
-      }
+    (file) => {
+      if (!file?.key || moving) return;
+      setPendingMoveKeys([file.key]);
+      setMoveOpen(true);
     },
-    [addTask, clearSelection, prefix, updateTask]
+    [moving]
   );
+
+  const handleMoveConfirm = async (targetPrefix) => {
+    const keys = pendingMoveKeys;
+    setMoveOpen(false);
+    setPendingMoveKeys([]);
+    if (!keys.length || targetPrefix == null) return;
+
+    setMoving(true);
+    try {
+      await moveTask({
+        keys,
+        targetPrefix,
+        label: `移动 ${keys[0]} → ${targetPrefix || "/"}`,
+      });
+    } catch (e) {
+      alert(`移动失败：${String(e?.message || e)}`);
+    } finally {
+      setMoving(false);
+    }
+  };
+
+  const handleMoveCancel = () => {
+    setMoveOpen(false);
+    setPendingMoveKeys([]);
+  };
 
 
   // hasSelected 已存在
@@ -300,6 +316,12 @@ export default function Home() {
           <ActionBar items={items} />
         </div>
       </div>
+      <FolderPickerDialog
+        open={moveOpen}
+        initialPrefix={prefix}
+        onClose={handleMoveCancel}
+        onConfirm={handleMoveConfirm}
+      />
       <PreviewModal file={previewFile} open={Boolean(previewFile)} onClose={handleClosePreview} />
     </div>
   );

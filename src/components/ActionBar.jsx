@@ -1,13 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { useStore } from "../app/store";
 import { deleteR2, renameR2 } from "../utils/api";
-import { moveR2, mkdirR2 } from "../utils/api";
+import { mkdirR2 } from "../utils/api";
+import useMoveTask from "../hooks/useMoveTask";
+import FolderPickerDialog from "./FolderPickerDialog";
 
 const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 
 export default function ActionBar({ items = [] }) {
   const { prefix, selected, selectAll, clearSelection, addTask, updateTask } = useStore();
   const [busy, setBusy] = useState(false);
+  // —— 批量移动：弹出文件夹选择器的显隐
+  const [moveOpen, setMoveOpen] = useState(false);
+  const moveTask = useMoveTask();
 
   // 当前可全选的 key 列表（只针对“文件”，不含目录 chip）
   const allKeys = useMemo(() => items.map(o => o.key), [items]);
@@ -66,24 +71,32 @@ export default function ActionBar({ items = [] }) {
     } finally { setBusy(false); }
   };
 
-  const handleMove = async () => {
+  const handleMoveClick = () => {
     if (selected.length === 0 || busy) return;
-    const to = prompt("移动到哪个文件夹？（相对路径，如 photos/2025/；留空表示根目录）", prefix || "");
-    if (to == null) return;
+    setMoveOpen(true);
+  };
+
+  const handleMoveConfirm = async (targetPrefix) => {
+    const keys = [...selected];
+    setMoveOpen(false);
+    if (!keys.length || targetPrefix == null) return;
+
     setBusy(true);
-
-    const id = uid();
-    addTask({ id, name: `移动 ${selected.length} 项 → ${to || "/"}`, status: "pending", pct: 0 });
-
     try {
-      await moveR2(selected, to || "", { overwrite: false, flatten: true });
-      updateTask(id, { status: "done", pct: 100 });
-      window.dispatchEvent(new CustomEvent("r2:reload"));
-      clearSelection();
+      await moveTask({
+        keys,
+        targetPrefix,
+        label: `移动 ${keys.length} 项 → ${targetPrefix || "/"}`,
+      });
     } catch (e) {
-      updateTask(id, { status: "error", error: String(e?.message || e) });
       alert(`移动失败：${String(e?.message || e)}`);
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleMoveCancel = () => {
+    setMoveOpen(false);
   };
 
   const handleMkdir = async () => {
@@ -106,16 +119,24 @@ export default function ActionBar({ items = [] }) {
   if (selected.length === 0 && allKeys.length === 0) return null;
 
   return (
-    <div className="sticky top-16 z-30 mx-4 mb-2 p-2 rounded-xl border bg-white shadow flex items-center gap-2">
-      <div className="text-sm">已选 {selected.length} 项</div>
-      <button onClick={handleToggleSelectAll} className="px-2 py-1 rounded bg-zinc-100">
-        {selected.length === allKeys.length ? "取消全选" : "全选"}
-      </button>
-      <button onClick={handleMkdir} disabled={busy} className="px-3 py-1 rounded bg-zinc-100 disabled:opacity-50">新建文件夹</button>
-      <button onClick={handleMove} disabled={busy || selected.length === 0} className="px-3 py-1 rounded bg-zinc-100 disabled:opacity-50">移动到</button>
-      <button onClick={handleRename} disabled={busy || selected.length !== 1} className="px-3 py-1 rounded bg-zinc-900 text-white disabled:opacity-50">重命名</button>
-      <button onClick={handleDelete} disabled={busy || selected.length === 0} className="px-3 py-1 rounded bg-red-600 text-white disabled:opacity-50">删除</button>
-      <button onClick={handleCancel} className="ml-auto px-2 py-1 rounded bg-zinc-100">取消</button>
-    </div>
+    <>
+      <div className="sticky top-16 z-30 mx-4 mb-2 p-2 rounded-xl border bg-white shadow flex items-center gap-2">
+        <div className="text-sm">已选 {selected.length} 项</div>
+        <button onClick={handleToggleSelectAll} className="px-2 py-1 rounded bg-zinc-100">
+          {selected.length === allKeys.length ? "取消全选" : "全选"}
+        </button>
+        <button onClick={handleMkdir} disabled={busy} className="px-3 py-1 rounded bg-zinc-100 disabled:opacity-50">新建文件夹</button>
+        <button onClick={handleMoveClick} disabled={busy || selected.length === 0} className="px-3 py-1 rounded bg-zinc-100 disabled:opacity-50">移动到</button>
+        <button onClick={handleRename} disabled={busy || selected.length !== 1} className="px-3 py-1 rounded bg-zinc-900 text-white disabled:opacity-50">重命名</button>
+        <button onClick={handleDelete} disabled={busy || selected.length === 0} className="px-3 py-1 rounded bg-red-600 text-white disabled:opacity-50">删除</button>
+        <button onClick={handleCancel} className="ml-auto px-2 py-1 rounded bg-zinc-100">取消</button>
+      </div>
+      <FolderPickerDialog
+        open={moveOpen}
+        initialPrefix={prefix}
+        onClose={handleMoveCancel}
+        onConfirm={handleMoveConfirm}
+      />
+    </>
   );
 }

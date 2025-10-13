@@ -1,4 +1,4 @@
-import { createPortal } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function Modal({ open, onClose, children, title }) {
   if (!open) return null;
