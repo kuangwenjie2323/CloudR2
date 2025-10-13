@@ -20,7 +20,7 @@ export default function App() {
           <Topbar />
         </div>
 
-        <section className="flex-1 min-h-0 p-3 sm:p-6">
+        <section className="flex-1 min-h-0 px-3 sm:px-6 pt-3 sm:pt-6 pb-safe lg:pb-6">
           <RoutesView />
         </section>
       </main>
