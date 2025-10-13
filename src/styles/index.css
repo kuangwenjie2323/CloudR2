@@ -1,3 +1,20 @@
+html, body, #root { height: 100%; }
+
+.app {
+  width: 100%;
+  min-height: 100dvh;   /* 新版动态视口，高度跟随地址栏 */
+  min-height: 100svh;   /* iOS/Android 小视口兜底 */
+  min-height: 100vh;    /* 旧浏览器兜底 */
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header { flex: 0 0 auto; }
+.app-main   { flex: 1 1 auto; min-height: 0; overflow: auto; }
+
+/* 列表容器避免被撑爆 */
+.file-grid, .file-list { min-height: 0; overflow: auto; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
