@@ -14,13 +14,13 @@ import UploadButton from "./components/UploadButton.jsx"
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <main className="flex flex-col">
+    <div className="app bg-zinc-50">
+      <main className="app-main flex flex-col">
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
           <Topbar />
         </div>
 
-        <section className="flex-1 p-3 sm:p-6">
+        <section className="flex-1 min-h-0 p-3 sm:p-6">
           <RoutesView />
         </section>
 
