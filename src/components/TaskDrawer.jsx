@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useStore } from "../app/store";
 
-const clampPct = (n = 0) => Math.min(100, Math.max(0, n));
-const formatPct = (n = 0) => `${clampPct(n).toFixed(0)}%`;
+export const clampPct = (n = 0) => Math.min(100, Math.max(0, n));
+export const formatPct = (n = 0) => `${clampPct(n).toFixed(0)}%`;
 
 /**
  * 粒度拆分：任务浮窗由按钮 + 弹层组成，方便后续替换其一。
