@@ -14,14 +14,14 @@ const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 export default function Home() {
   const {
     view,
-    setView,
     prefix,
     setPrefix,
     selected,
     toggleSelect,
     clearSelection,
     addTask,
-    updateTask
+    updateTask,
+    setReloadList
   } = useStore();
   const { items, folders, loading, error, cursor, loadMore, reload } = useR2List(prefix);
   const [ctx, setCtx] = useState(null); // { key, x, y } 右键/长按菜单位置
@@ -48,6 +48,12 @@ export default function Home() {
     window.addEventListener("r2:reload", h);
     return () => window.removeEventListener("r2:reload", h);
   }, [reload, prefix]);
+
+  // 将当前列表的刷新函数暴露给顶部栏，保持触发入口统一
+  useEffect(() => {
+    setReloadList(() => reload);
+    return () => setReloadList(null);
+  }, [reload, setReloadList]);
 
   const hasSelected = selected.length > 0;
 
@@ -170,6 +176,7 @@ export default function Home() {
   };
 
   return (
+    <div className="px-4 space-y-4 pb-6 lg:pb-8">
     // 统一加上 pb-safe，避免底部导航遮挡最后一行内容
     <div className="px-4 space-y-4 pb-safe lg:pb-8">
       {/* 顶部栏：左侧搜索入口 + 中间标题 + 右侧刷新/视图切换 */}
@@ -204,7 +211,6 @@ export default function Home() {
           </button>
         </div>
       </header>
-
       {/* 桌面端：内联批量操作条；移动端：底部抽屉（见文末） */}
       <div className="hidden md:block">
         <ActionBar items={items} />
