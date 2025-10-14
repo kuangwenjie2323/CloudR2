@@ -36,12 +36,12 @@ background: rgba(var(--card), 0.7);
 
 @layer base {
   :root{
-    --tabbar-h: 60px;           /* 你的底部导航或任务栏高度：按需改 */
+    --tabbar-h: 52px;           /* 你的底部导航或任务栏高度：按需改 */
   }
 }
 
 @layer base {
-  :root{ --tabbar-h: 60px; }
+  :root{ --tabbar-h: 52px; }
 }
 
 @layer utilities {
