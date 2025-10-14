@@ -7,7 +7,7 @@ import FolderPickerDialog from "./FolderPickerDialog";
 
 const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 
-export default function ActionBar({ items = [] }) {
+export default function ActionBar({ items = [], variant = "desktop", className = "" }) {
   const { prefix, selected, selectAll, clearSelection, addTask, updateTask } = useStore();
   const [busy, setBusy] = useState(false);
   // —— 批量移动：弹出文件夹选择器的显隐
@@ -118,10 +118,21 @@ export default function ActionBar({ items = [] }) {
 
   if (selected.length === 0 && allKeys.length === 0) return null;
 
+  // —— 根据调用场景（桌面/移动抽屉）调整外层样式
+  const isDesktopVariant = variant === "desktop";
+  const containerClassName = [
+    isDesktopVariant
+      ? "sticky top-16 z-30 mx-4 mb-2 p-2 rounded-xl border bg-white shadow flex items-center gap-2"
+      : "flex flex-wrap items-center gap-2",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <>
-      <div className="sticky top-16 z-30 mx-4 mb-2 p-2 rounded-xl border bg-white shadow flex items-center gap-2">
-        <div className="text-sm">已选 {selected.length} 项</div>
+      <div className={containerClassName}>
+        {isDesktopVariant && <div className="text-sm">已选 {selected.length} 项</div>}
         <button onClick={handleToggleSelectAll} className="px-2 py-1 rounded bg-zinc-100">
           {selected.length === allKeys.length ? "取消全选" : "全选"}
         </button>

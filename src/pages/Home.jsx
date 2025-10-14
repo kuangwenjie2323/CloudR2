@@ -312,8 +312,7 @@ export default function Home() {
         aria-hidden={!hasSelected}
       >
         <div className="mx-3 mb-3 rounded-2xl border border-zinc-200 bg-white shadow-lg p-3">
-          <div className="text-sm text-zinc-500 mb-2">已选 {selected.length} 项</div>
-          <ActionBar items={items} />
+          <ActionBar items={items} variant="compact" className="w-full" />
         </div>
       </div>
       <FolderPickerDialog
