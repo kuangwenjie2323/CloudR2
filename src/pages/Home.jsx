@@ -8,6 +8,7 @@ import FolderPickerDialog from "../components/FolderPickerDialog";
 import { deleteR2, renameR2 } from "../utils/api";
 import useMoveTask from "../hooks/useMoveTask";
 import { formatBytes, formatDateTime } from "../utils/format";
+import FileName from "../components/files/FileName";
 
 const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 
@@ -374,7 +375,11 @@ function CardGrid({
         />
       </div>
       <div className="aspect-video rounded-xl bg-zinc-100 mb-2" />
-      <div className="text-sm font-medium truncate" title={obj.key}>{obj.key.split("/").pop()}</div>
+      <FileName
+        name={obj.key.split("/").pop()}
+        className="text-sm font-medium"
+        title={obj.key}
+      />
       <div className="text-xs text-zinc-500">{formatBytes(obj.size)} · {formatDateTime(obj.uploaded)}</div>
     </div>
   );
@@ -410,7 +415,10 @@ function RowList({
         <input type="checkbox" checked={isChecked} onChange={onToggle} title="选择" />
       </td>
       <td className="p-2" title={obj.key}>
-        <div className="truncate font-medium text-zinc-700">{displayName}</div>
+        <FileName
+          name={displayName}
+          className="font-medium text-zinc-700"
+        />
         {/* 移动端：把体积/时间信息折叠到名称下方，避免列宽不足时重叠 */}
         <div className="md:hidden mt-1 text-xs text-zinc-500 flex flex-wrap gap-x-2 gap-y-1">
           <span>{formatBytes(obj.size)}</span>
